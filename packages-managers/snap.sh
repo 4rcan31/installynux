@@ -33,6 +33,7 @@ makepkg -si || error "Failed to build and install snapd"
 
 info "Enabling and starting snapd socket"
 sudo systemctl enable --now snapd.socket || error "Failed to enable snapd socket"
+systemctl enable --now snapd.apparmor || error "Faild to enable service"
 
 info "Cleaning up temporary files"
 cd / || error "Failed to change to root directory"
