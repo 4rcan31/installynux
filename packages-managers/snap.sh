@@ -14,29 +14,28 @@ function error {
     exit 1
 }
 
-# Check if running as root
-if [[ $EUID -ne 0 ]]; then
-   error "This script must be run as root"
+# Check if running as root and exit if it is
+if [[ $EUID -eq 0 ]]; then
+   error "This script should not be run as root. Please run as a regular user."
 fi
 
 info "Creating temporary directory"
-cd / || error "Failed to change to root directory"
-mkdir -p temp || error "Failed to create temporary directory"
-cd temp || error "Failed to change to temporary directory"
+TEMP_DIR=$(mktemp -d) || error "Failed to create temporary directory"
 
 info "Cloning snapd repository from AUR"
-git clone https://aur.archlinux.org/snapd.git || error "Failed to clone snapd repository"
-cd snapd || error "Failed to change to snapd directory"
+git clone https://aur.archlinux.org/snapd.git "$TEMP_DIR/snapd" || error "Failed to clone snapd repository"
 
-info "Building and installing snapd"
-makepkg -si || error "Failed to build and install snapd"
+info "Building snapd"
+cd "$TEMP_DIR/snapd" || error "Failed to change to snapd directory"
+makepkg -si --noconfirm || error "Failed to build and install snapd"
 
 info "Enabling and starting snapd socket"
 sudo systemctl enable --now snapd.socket || error "Failed to enable snapd socket"
-systemctl enable --now snapd.apparmor || error "Faild to enable service"
+sudo systemctl enable --now snapd.apparmor || error "Failed to enable snapd.apparmor"
 
 info "Cleaning up temporary files"
-cd / || error "Failed to change to root directory"
-rm -rf /temp/snapd || error "Failed to remove temporary snapd directory"
+rm -rf "$TEMP_DIR" || error "Failed to remove temporary directory"
 
+# Display the apps in start laucher
+ln -st ~/.local/share/applications /var/lib/snapd/desktop/applications/*.desktop 2>/dev/null
 info "Snapd installation completed successfully"
