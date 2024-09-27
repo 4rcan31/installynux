@@ -27,8 +27,17 @@ while getopts "ronh" opt; do
 done
 
 # Ejecutar las actualizaciones con pacman
+echo "Actualizando paquetes de pacman..."
 sudo pacman -Syy --noconfirm
 sudo pacman -Syu --noconfirm
+
+# Ejecutar las actualizaciones con yay
+echo "Actualizando paquetes de yay..."
+yay -Syu --noconfirm
+
+# Ejecutar las actualizaciones con snap
+echo "Actualizando paquetes de snap..."
+sudo snap refresh
 
 # Tomar acción basada en las opciones
 if $reboot; then
